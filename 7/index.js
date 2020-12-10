@@ -75,11 +75,32 @@ const bagsContaining = (bag) => (paths) => {
     }, new Set())
 }
 
+const findBagsWithin = (bag) => (list) => {
+    const go = (bags, c) => {
+        console.log(bags)
+        const x = Object.entries(bags)
+
+        if (x === 0) {
+            return 0
+        }
+
+        const sum = (x) => Object.entries(x).reduce((c, [_b, n]) => c + n, 0)
+
+        return x.reduce((count, [b, amount]) => {
+            const y = amount * sum(list[b])
+            console.log(count, amount, sum(list[b]), y)
+            return y + go(list[b], count + (y === 0 ? 0 : amount))
+        }, c)
+    }
+
+    return go(list[bag], 0)
+}
+
 const count = (a) => a.size
 
 const run = (bag) =>
-    readFile('data.txt').then(
-        pipe(parseFile, toAdjacenyList, doDfs, bagsContaining(bag), count, log),
+    readFile('example2.txt').then(
+        pipe(parseFile, toAdjacenyList, findBagsWithin(bag), log),
     )
 
 run('shiny gold')
