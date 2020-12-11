@@ -33,21 +33,18 @@ const runProgram = (instructions) => {
         .filter((instruction) => ['nop', 'jmp'].includes(instruction.operation))
         .map((instruction) => instruction.index)
 
-    const go = ({ index, value, ran, switches }) => {
-        console.log(index, value, ran, switches)
-
+    const go = ({ index, value, ran, switched }) => {
         if (index === instructions.length) {
             return value
         }
 
         const { operation, argument } = instructions[index]
 
-        const [head, ...rest] = switches
         if (ran.includes(index)) {
-            return go({ index: 0, value: 0, ran: [], switches: rest })
+            return null
         }
 
-        const o = index === head ? _switch(operation) : operation
+        const o = index === switched ? _switch(operation) : operation
 
         switch (o) {
             case 'nop':
@@ -55,7 +52,7 @@ const runProgram = (instructions) => {
                     index: index + 1,
                     value,
                     ran: [...ran, index],
-                    switches,
+                    switched,
                 })
 
             case 'acc':
@@ -63,7 +60,7 @@ const runProgram = (instructions) => {
                     index: index + 1,
                     value: value + argument,
                     ran: [...ran, index],
-                    switches,
+                    switched,
                 })
 
             case 'jmp':
@@ -71,12 +68,18 @@ const runProgram = (instructions) => {
                     index: index + argument,
                     value,
                     ran: [...ran, index],
-                    switches,
+                    switched,
                 })
         }
     }
 
-    return go({ index: 0, value: 0, ran: [], switches })
+    return switches.reduce((output, switched) => {
+        if (output !== null) {
+            return output
+        }
+
+        return go({ index: 0, value: 0, ran: [], switched })
+    }, null)
 }
 
 const run = () => readFile('data.txt').then(pipe(parseFile, runProgram, log))
