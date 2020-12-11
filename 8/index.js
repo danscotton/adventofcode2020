@@ -27,22 +27,43 @@ const parseFile = pipe(
 )
 
 const runProgram = (instructions) => {
-    const go = ({ index, value, ran }) => {
-        const { operation, argument } = instructions[index]
+    const _switch = (operation) => (operation === 'nop' ? 'jmp' : 'nop')
 
-        if (ran.includes(index)) {
+    const switches = instructions
+        .filter((instruction) => ['nop', 'jmp'].includes(instruction.operation))
+        .map((instruction) => instruction.index)
+
+    const go = ({ index, value, ran, switches }) => {
+        console.log(index, value, ran, switches)
+
+        if (index === instructions.length) {
             return value
         }
 
-        switch (operation) {
+        const { operation, argument } = instructions[index]
+
+        const [head, ...rest] = switches
+        if (ran.includes(index)) {
+            return go({ index: 0, value: 0, ran: [], switches: rest })
+        }
+
+        const o = index === head ? _switch(operation) : operation
+
+        switch (o) {
             case 'nop':
-                return go({ index: index + 1, value, ran: [...ran, index] })
+                return go({
+                    index: index + 1,
+                    value,
+                    ran: [...ran, index],
+                    switches,
+                })
 
             case 'acc':
                 return go({
                     index: index + 1,
                     value: value + argument,
                     ran: [...ran, index],
+                    switches,
                 })
 
             case 'jmp':
@@ -50,11 +71,12 @@ const runProgram = (instructions) => {
                     index: index + argument,
                     value,
                     ran: [...ran, index],
+                    switches,
                 })
         }
     }
 
-    return go({ index: 0, value: 0, ran: [] })
+    return go({ index: 0, value: 0, ran: [], switches })
 }
 
 const run = () => readFile('data.txt').then(pipe(parseFile, runProgram, log))
