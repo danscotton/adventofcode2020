@@ -41,6 +41,45 @@ const process = (n) => (numbers) => {
     return go({ index: 0, check: numbers[n] })
 }
 
-const run = (n) => readFile('data.txt').then(pipe(parseFile, process(n), log))
+const findNumbers = (numbers) => (n) => {
+    const go = ({ start, carry, total }) => {
+        if (total === n) {
+            return carry
+        }
+
+        if (total > n) {
+            return null
+        }
+
+        const [head] = numbers.slice(start)
+        return go({
+            start: start + 1,
+            carry: [...carry, head],
+            total: total + head,
+        })
+    }
+
+    return numbers.reduce((output, _number, index) => {
+        if (output !== null) {
+            return output
+        }
+
+        return go({ start: index, carry: [], total: 0 })
+    }, null)
+}
+
+const calculateWeakness = (numbers) => {
+    return Math.min(...numbers) + Math.max(...numbers)
+}
+
+const run = (n) =>
+    readFile('data.txt').then(
+        pipe(
+            parseFile,
+            (file) => pipe(process(n), findNumbers(file))(file),
+            calculateWeakness,
+            log,
+        ),
+    )
 
 run(25)
