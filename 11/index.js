@@ -31,9 +31,21 @@ const positions = {
 
 const isEmpty = (value) => value === positions.EMPTY
 const isOccupied = (value) => value === positions.OCCUPIED
+const isFloor = (value) => value === positions.FLOOR
+const isSeat = (value) => [positions.EMPTY, positions.OCCUPIED].includes(value)
 
-const applyPosition = ([x, y]) => ([i, j]) => [x + i, y + j]
-const getValue = (layout) => ([x, y]) => layout?.[y]?.[x]
+// const applyPosition = ([x, y]) => ([i, j]) => [x + i, y + j]
+// const getValue = (layout) => ([x, y]) => layout?.[y]?.[x]
+
+const applyPosition = ([x, y], layout) => ([i, j]) => {
+    const value = layout?.[y + j]?.[x + i] || 'L'
+
+    if (isSeat(value)) {
+        return value
+    }
+
+    return applyPosition([x + i, y + j], layout)([i, j])
+}
 
 const adjacentSeatsOccupied = (position, layout) =>
     [
@@ -46,8 +58,7 @@ const adjacentSeatsOccupied = (position, layout) =>
         [0, 1],
         [1, 1],
     ]
-        .map(applyPosition(position))
-        .map(getValue(layout))
+        .map(applyPosition(position, layout))
         .filter(isOccupied)
 
 const debugPosition = ([x, y], value, layout) => {
@@ -68,7 +79,7 @@ const apply = (position, value, layout) => {
 
     if (
         isOccupied(value) &&
-        adjacentSeatsOccupied(position, layout).length >= 4
+        adjacentSeatsOccupied(position, layout).length >= 5
     ) {
         return positions.EMPTY
     }
@@ -90,9 +101,7 @@ const process = (layout) => {
         return id(layout).split('').filter(isOccupied).length
     }
 
-    // console.log('-----------------------------------')
     // debug(applied)
-    // console.log('-----------------------------------')
     return process(applied)
 }
 
